@@ -190,6 +190,6 @@ if __name__ == "__main__" :
         for item in downloadList:
             dc['totSum'] = dc['totLen'] * 100
             yt = YouTube(item['url'], on_progress_callback=progress_function)
-            vid = yt.streams.filter(mime_type='video/mp4').order_by('resolution').last()
-            vid.download(pyt.downloadDir)
+            yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first().download(pyt.downloadDir)
+            
             nl += 1

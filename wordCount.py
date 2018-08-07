@@ -19,4 +19,4 @@ txt = 'Better Selection of Software Providers Through Trialsourcing Failure Fact
 sam = wordCount(txt)
 
 for i in sorted(sam.items(), key=operator.itemgetter(1), reverse=True): 
-    print i
+    print(i)
