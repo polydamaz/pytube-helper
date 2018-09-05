@@ -7,122 +7,88 @@ import locale
 import html
 
 from dialog import Dialog
-from urllib.request import Request,urlopen
+from urllib.request import Request, urlopen
 from pytube import YouTube
 
 __version__ = '0.3.1'
 
 class PytHelper(YouTube):
-    """Sub Class"""
-    def __init__(self, url, downloadDir, defer_prefetch_init=False):
-        YouTube.__init__(self, url, defer_prefetch_init)
+    def __init__(
+        self, url=None, downloadPath=None, 
+        defer_prefetch_init=False, on_progress_callback=None, on_complete_callback=None, proxies=None
+    ):
+        YouTube.__init__(
+            self, url=url, defer_prefetch_init=defer_prefetch_init, 
+            on_progress_callback=on_progress_callback, on_complete_callback=on_complete_callback, proxies=proxies
+        )
         
-        self.url = url
-        self.downloadDir = downloadDir
-        self.playList = []
-        self.playListURL = ''
-        self.playListTitle = ''
-        self.currentDownload = None
-        self.totSum = 0
-        self.totPerSum = 0
-        self.totPer = 0
+        self.__url = url
+        self.__playListURL = self.__getPlayListURL()
+        self.__playListTitle = ''
+        self.__downloadPath = './' if downloadPath is '.' else downloadPath
+        self.__playList = []
 
-        self.main()
-
-    def main(self):
-        # list gubun
-        self.playListURL = self.getList(self.url)
-        # init path
-        if self.downloadDir is '.':
-            self.downloadDir += '/' 
-
-        # has playList
-        if self.playListURL:
+        if self.__playListURL:
             self.__extractPlayList()
-        else: 
-            self.playList.append({
-                'siz': 0,
-                'per': 0,
-                'url': self.url,
-                'code': '(1)',
-                'title': '0 title'
+        else:
+            self.__playList.append({
+                'siz': 0, 'per': 0, 'url': self.__url,
+                'code': '(1)', 'title': self.__stripTag(self.title)
             })
 
-    def getPlayList(self):
-        return self.playList
-            
-    def downPlaylist(self,dic=[]):
-        for u in self.playList:
-            if u['code'] in dic:
-                yt = YouTube(u['url'])
-                vid = yt.streams.filter(mime_type='video/mp4').order_by('resolution').last()
-                if self.downloadDir is '.':
-                   self.downloadDir += '/' 
-                directory_contents = [f.split('.mp4',1)[0] for f in os.listdir(self.downloadDir) if f.endswith('.mp4')]
-                # print('path={}{}'.format(self.downloadDir, vid.default_filename) )
-                if vid.default_filename in directory_contents:
-                    print('Skipping {}'.format(vid.default_filename))
-                    continue
-                else:
-                    print('Downloading {}'.format(vid.default_filename))
-                    vid.download(self.downloadDir) 
-                    print('Done')     
-            else:
-                print('##')
-        sys.exit()
+    @property
+    def playListTitle(self):
+        return self.__playListTitle
+    
+    @property
+    def playList(self):
+        return self.__playList
 
-    def downloadVideo(self, url, progress_function=None, complete_function=None):
-        yt = YouTube(url, on_progress_callback=progress_function, on_complete_callback=complete_function)
-        """ 여기서 확장자 선택"""
-        vid = yt.streams.filter(mime_type='video/mp4').order_by('resolution').last()
-
-        # directory_contents = [f.split('.mp4',1)[0] for f in os.listdir(self.downloadDir) if f.endswith('.mp4')]
-        
-        # if vid.default_filename in directory_contents:
-        #     print('Skipping {}'.format(vid.default_filename))
-        #     return False
-        # self.currentDownload = vid
-        vid.download(self.downloadDir)
-             
-    @staticmethod	
-    def stripTag(string):
-        rx = re.compile('([&#~*=+?:;<>,/\'\"])')
-        return (rx.sub('', html.unescape(string))).strip()
-
-    @staticmethod
-    def getList(url):
-        qstr = url[url.find('?')+1:]
+    @property
+    def downloadPath(self):
+        return self.__downloadPath
+ 
+    @property
+    def playListURL(self):
+        return self.__playListURL
+ 
+    def __getPlayListURL(self):
+        qstr = self.__url[self.__url.find('?')+1:]
         for el in qstr.split('&'):
             if 'list' in el.split('='):
                 return 'https://www.youtube.com/playlist?{}'.format(el)
-        
+        return None
+
+    def __stripTag(self, string):
+        rx = re.compile('([&#~*=+?:;|<>,/\'\"])')
+        return (rx.sub('', html.unescape(string))).strip()
+
     def __extractPlayList(self):
         titleLine = False
-        request = Request(self.playListURL)
+        request = Request(self.__playListURL)
+        playList = []
         n = 0
 
         for line in urlopen(request).readlines():
             tag = line.decode('utf8')
-
             if '<title>' in tag:
-                self.playListTitle = self.stripTag( tag.split('<title>',1)[1].split(' - YouTube</title>',1)[0])
-
+                self.__playListTitle = self.__stripTag( tag.split('<title>',1)[1].split(' - YouTube</title>',1)[0])
             if titleLine :
-                self.playList[len(self.playList)-1]['title'] += tag.strip()
+                playList[len(playList)-1]['title'] += tag.strip()
                 titleLine = False
-
             if 'pl-video-title-link' in tag:
-                playList = {
+                item = {
                     'siz': 0,
                     'per': 'wait',
                     'url': 'https://www.youtube.com' + tag.split('href="',1)[1].split('" ',1)[0],
                     'code': '({})'.format(n),
                     'title': ''
                 }
-                self.playList.append(playList)
+                playList.append(item)
                 titleLine = True
                 n += 1
-                # self.playList.append('https://www.youtube.com' + tag.split('href="',1)[1].split('" ',1)[0])
+
+        self.__playList = playList 
 
 if __name__ == "__main__" :
     
@@ -168,8 +134,7 @@ if __name__ == "__main__" :
 
     d.infobox(text=m02)
     pyt = PytHelper(url if url else args.playlisturl, path)
-    playList = pyt.getPlayList()    
-
+    playList = pyt.playList
     d.infobox(text=m02)
 
     m03 = u"다운받을 영상을 선택하세요."
@@ -190,6 +155,6 @@ if __name__ == "__main__" :
         for item in downloadList:
             dc['totSum'] = dc['totLen'] * 100
             yt = YouTube(item['url'], on_progress_callback=progress_function)
-            yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first().download(pyt.downloadDir)
+            yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first().download(pyt.downloadPath)
             
             nl += 1
