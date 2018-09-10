@@ -1,7 +1,7 @@
 # pytube: playlist download helper
 ## 소개
 
-[Youtube]() 재생목록을 한 번에 다운로드 할 수 있게 도와주는 프로그램입니다.  python 라이브러리 [pytube]() 의 강력한 기능을 그대로 확장하여 사용 하실 수 있습니다.  
+[Youtube](https://youtube.com) 재생목록을 한 번에 다운로드 할 수 있게 도와주는 프로그램입니다.  python 라이브러리 [pytube](https://github.com/nficano/pytube) 의 강력한 기능을 그대로 확장하여 사용 하실 수 있습니다.  
 
 <a href=""><img src="./images/dn_example.gif"></a>
 
