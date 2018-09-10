@@ -30,9 +30,8 @@ $ python3 playlistDailog.py
 
 4. 목록을 확인하며 다운 받을 영상을 선택합니다.
    <a href=""><img src="./images/003.png"></a>
+   <a href=""><img src="./images/005.png"></a>
 
-5. 다운로드!!
-   <a href=""><img src="./images/005.png" width="735"></a>
 
 
 
