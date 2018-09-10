@@ -32,7 +32,7 @@ $ python3 playlistDailog.py
    <a href=""><img src="./images/003.png"></a>
 
 5. 다운로드!!
-   <a href=""><img src="./images/005.png"></a>
+   <a href=""><img src="./images/005.png" width="735"></a>
 
 
 
